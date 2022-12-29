@@ -1,0 +1,97 @@
+<html>
+  <head>
+    <title>OpenAI API Demo</title>
+    <style>
+      /* Add your CSS styles here */
+      body {
+        font-family: Arial, sans-serif;
+        color: #333333;
+      }
+      form {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        box-sizing: border-box;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+      }
+      input[type="submit"] {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Ask a question</h1>
+    <form id="openai-form" method="post" action="https://api.openai.com/v1/completions">
+      <input type="text" id="question" name="question">
+      <input type="submit" value="Submit">
+    </form>
+    <div id="response"></div>
+  </body>
+  <script>
+    const form = document.getElementById('openai-form');
+    form.addEventListener('submit', function(event) {
+      event.preventDefault(); // prevent the form from reloading the page
+
+      const question = document.getElementById('question').value;
+      const headers = {
+        'Authorization': 'Bearer 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',
+        'Content-Type': 'application/json'
+      };
+      const body = {
+        'model': 'text-davinci-003',
+        'prompt': question,
+        'max_tokens': 1000,
+        'temperature': 1
+      };
+      const jsonBody = JSON.stringify(body); // convert the body object to JSON format
+
+      // send a POST request to the OpenAI API
+      const request = new XMLHttpRequest();
+      request.open("POST", form.action);
+       // set the headers
+       request.setRequestHeader("Authorization", "Bearer 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");
+      request.setRequestHeader("Content-Type", "application/json");
+      // send the request
+      request.send(jsonBody);
+
+      // handle the response from the API
+      request.onload = function() {
+        if (request.status === 200) {
+       // if the request was successful, parse the response as JSON
+       const data = JSON.parse(request.responseText);
+          // get the `choices` array from the response
+          const choices = data.choices;
+          // create an empty array to store the text elements
+          let textElements = [];
+          // iterate over the `choices` array
+          for (const choice of choices) {
+            // get the `text` element from each choice
+            textElements.push(choice.text);
+          }
+          // display the text elements
+          const response = document.getElementById('response');
+          response.innerHTML = textElements.join(', ');
+        } else {
+          // if there was an error, display an error message
+          const response = document.getElementById('response');
+          response.innerHTML = 'Error: ' + request.status;
+        }
+      };
+    });
+  </script>
+</html>

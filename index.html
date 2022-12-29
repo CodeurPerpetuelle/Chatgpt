@@ -32,15 +32,92 @@
       input[type="submit"]:hover {
         background-color: #45a049;
       }
+      /* Add some styles for the conversation transcript */
+      .conversation {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 500px;
+        margin: 0 auto;
+      }
+      .conversation .message {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+      .conversation .message .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #cccccc;
+        margin-right: 16px;
+      }
+      .conversation .message.user .avatar {
+        background-color: #4CAF50;
+      }
+      .conversation .message .text {
+        background-color: #f8f8f8;
+        padding: 8px 12px;
+        border-radius: 4px;
+      }
+      .conversation .message.user .text {
+        background-color: #e0f2f1;
+      }
+      /* Add some styles for the left side menu */
+      .menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 200px;
+        height: 100%;
+        background-color: #eeeeee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 16px;
+      }
+      .menu .button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .menu .button:hover {
+        background-color: #45a049;
+      }
     </style>
   </head>
   <body>
-    <h1>Ask a question</h1>
-    <form id="openai-form" method="post" action="https://api.openai.com/v1/completions">
-      <input type="text" id="question" name="question">
-      <input type="submit" value="Submit">
-    </form>
-    <div id="response"></div>
+    <div class="menu">
+      <button class="button" onclick="startNewConversation()">Start New Conversation</button>
+    </div>
+    <div class="conversation">
+      <div class="message user">
+        <div class="avatar"></div>
+        <div class="text">
+          <p>Hello, how can I help you today?</p>
+        </div>
+      </div>
+      <form id="openai-form" method="post" action="https://api.openai.com/v1/completions">
+        <div class="message system">
+          <div class="avatar"></div>
+          <div class="text">
+            <p>I'm here to answer your questions. What do you want to know?</p>
+          </div>
+        </div>
+        <div class="message user">
+          <div class="avatar"></div>
+          <div class="text">
+            <input type="text" id="question" name="question" placeholder="Ask a question">
+            <input type="submit" value="Submit">
+          </div>
+        </div>
+        <div id="response"></div>
+      </form>
+    </div>
+    <button onclick="exportTranscript()">Export Transcript</button>
   </body>
   <script>
     const form = document.getElementById('openai-form');
@@ -49,7 +126,7 @@
 
       const question = document.getElementById('question').value;
       const headers = {
-        'Authorization': 'Bearer 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',
+        'Authorization': 'Bearer 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',
         'Content-Type': 'application/json'
       };
       const body = {
@@ -64,7 +141,7 @@
       const request = new XMLHttpRequest();
       request.open("POST", form.action);
        // set the headers
-       request.setRequestHeader("Authorization", "Bearer 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");
+       request.setRequestHeader("Authorization", "Bearer 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");
       request.setRequestHeader("Content-Type", "application/json");
       // send the request
       request.send(jsonBody);
@@ -84,8 +161,19 @@
             textElements.push(choice.text);
           }
           // display the text elements
-          const response = document.getElementById('response');
-          response.innerHTML = textElements.join(', ');
+          const response =
+          document.getElementById('response');
+          // create a new message element for the system's response
+          const messageElement = document.createElement('div');
+          messageElement.classList.add('message', 'system');
+          messageElement.innerHTML = `
+            <div class="avatar"></div>
+            <div class="text">
+              <p>${textElements.join(', ')}</p>
+            </div>
+          `;
+          // append the message element to the conversation
+          response.appendChild(messageElement);
         } else {
           // if there was an error, display an error message
           const response = document.getElementById('response');
@@ -93,5 +181,137 @@
         }
       };
     });
+
+    function startNewConversation() {
+      // clear the conversation and form inputs
+      const conversation = document.querySelector('.conversation');
+      conversation.innerHTML = `
+        <div class="message user">
+          <div class="avatar"></div>
+          <div class="text">
+            <p>Hello, how can I help you today?</p>
+          </div>
+        </div>
+        <form id="openai-form" method="post" action="https://api.openai.com/v1/completions">
+          <div class="message system">
+            <div class="avatar"></div>
+            <div class="text">
+              <p>I'm here to answer your questions. What do you want to know?</p>
+            </div>
+          </div>
+          <div class="message user">
+            <div class="avatar"></div>
+            <div class="text">
+              <input type="text" id="question" name="question" placeholder="Ask a question">
+              <input type="submit" value="Submit">
+            </div>
+          </div>
+          <div id="response"></div>
+        </form>
+      `;
+      // re-add the form event listener
+      const form = document.getElementById('openai-form');
+      form.addEventListener('submit', function(event) {
+        event.preventDefault(); // prevent the form from reloading the page
+
+        const question = document.getElementById('question').value;
+        const headers = {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json'
+        };
+        const body = {
+          'model': 'text-davinci-003',
+          'prompt': question,
+          'max_tokens': 1000,
+          'temperature': 1
+        };
+        const jsonBody = JSON.stringify(body); // convert the body object to JSON format
+
+        // send a POST request to the OpenAI API
+        const request = new XMLHttpRequest();
+        request.open("POST", form.action);
+         // set the headers
+         request.setRequestHeader("Authorization", "Bearer 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");
+        request.setRequestHeader("Content-Type", "application/json");
+        // send the request
+        request.send(jsonBody);
+
+        // handle the response from the API
+        request.onload = function() {
+          if (request.status === 200) {
+         // if the request was successful, parse the response as JSON
+         const data = JSON.parse(request.responseText);
+            // get the `choices` array from the response
+            const choices = data.choices;
+            // create an empty array to store the text elements
+            let textElements = [];
+            // iterate over the `choices` array
+            for (const choice of choices) {
+              // get the `text` element from each choice
+              textElements.push(choice.text);
+            }
+            // display the text elements
+            const response = document.getElementById('response');
+            // create a new message element for the system's response
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'system');
+            messageElement.innerHTML = `
+              <div class="avatar"></div>
+              <div class="text">
+                <p>${textElements.join(', ')}</p>
+              </div>
+            `;
+            // append the message element to the conversation
+            response.appendChild(messageElement);
+          } else {
+            // if there was an error, display an error message
+            const response = document.getElementById('response');
+            response.innerHTML = 'Error: ' + request.status;
+          }
+        };
+      });
+    }
+
+    function exportTranscript() {
+      // create a new element to hold the transcript
+      const transcriptElement = document.createElement('pre');
+      // get all the message elements
+      const messageElements = document.querySelectorAll('.conversation .message');
+      // create an array to store the transcript lines
+      let transcript = [];
+      // iterate over the message elements
+      for (const messageElement of messageElements) {
+        // get the avatar element
+        const avatarElement = messageElement.querySelector('.avatar');
+        // get the text element
+        const textElement = messageElement.querySelector('.text p');
+        // determine the speaker based on the presence of the avatar element
+        let speaker = 'System';
+        if (avatarElement) {
+          speaker = 'User';
+        }
+        // add the line to the transcript
+        transcript.push(`${speaker}: ${textElement.innerText}`);
+      }
+      // set the innerText of the transcript element to the joined transcript lines
+      transcriptElement.innerText = transcript.join('\n');
+      // add the transcript element to the page
+      document.body
+      .appendChild(transcriptElement);
+      // create a new link element
+      const linkElement = document.createElement('a');
+      // set the download attribute of the link element
+      linkElement.setAttribute('download', 'transcript.txt');
+      // set the href of the link element to the URL of the transcript element
+      linkElement.href = URL.createObjectURL(new Blob([transcriptElement.innerText], { type: 'text/plain' }));
+      // add the link element to the page
+      document.body.appendChild(linkElement);
+      // click the link element to download the file
+      linkElement.click();
+      // remove the link element from the page
+      document.body.removeChild(linkElement);
+      // remove the transcript element from the page
+      document.body.removeChild(transcriptElement);
+    }
   </script>
 </html>
